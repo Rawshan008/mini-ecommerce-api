@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from typing import List, Annotated
 from database.config import get_session
 from api.users.models import UsersResponse, Users, UsersCreate, UsersUpdate
-from auth.utils import get_password_hash
+from auth.utils import get_password_hash, get_current_user
 
 
 router = APIRouter()
@@ -23,7 +23,7 @@ async def users_read(
 
 # Create Users 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def users_create(create_user: UsersCreate, session: Session = Depends(get_session)):
+async def users_create(create_user: UsersCreate, session: Session = Depends(get_session), current_user: Users = Depends(get_current_user)):
   hashed_password = get_password_hash(create_user.hashed_password)
   user = Users(
     email=create_user.email,
@@ -48,7 +48,7 @@ async def users_read(user_id: int, session: Session = Depends(get_session)):
 
 # Update Users 
 @router.put("/{user_id}", status_code=status.HTTP_200_OK, response_model=UsersResponse)
-async def users_update(user_id: int, user_update: UsersUpdate, session: Session = Depends(get_session)):
+async def users_update(user_id: int, user_update: UsersUpdate, session: Session = Depends(get_session), current_user: Users = Depends(get_current_user)):
   user = session.get(Users, user_id)
   if not user:
     raise HTTPException(status_code=404, detail="User not found")
@@ -68,7 +68,7 @@ async def users_update(user_id: int, user_update: UsersUpdate, session: Session 
 
 # Delete User 
 @router.delete("/{user_id}")
-async def users_delete(user_id: int, session: Session = Depends(get_session)):
+async def users_delete(user_id: int, session: Session = Depends(get_session), current_user: Users = Depends(get_current_user)):
   user = session.get(Users, user_id)
   if not user:
     raise HTTPException(status_code=404, detail="User not Found")
@@ -77,8 +77,3 @@ async def users_delete(user_id: int, session: Session = Depends(get_session)):
   return {
     "status": "Delete User Successfully"
   }
-
-
-# user utility 
-def get_user_by_username(username: str, session: Session ):
-  return session.exec(select(Users).where(Users.username == username)).first()
