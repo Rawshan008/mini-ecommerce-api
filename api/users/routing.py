@@ -23,7 +23,7 @@ async def users_read(
 
 # Create Users 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def users_create(create_user: UsersCreate, session: Session = Depends(get_session), current_user: Users = Depends(get_current_user)):
+async def users_create(create_user: UsersCreate, session: Session = Depends(get_session)):
   hashed_password = get_password_hash(create_user.hashed_password)
   user = Users(
     email=create_user.email,
